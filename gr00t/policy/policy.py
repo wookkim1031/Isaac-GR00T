@@ -77,10 +77,19 @@ class BasePolicy(ABC):
         """
         pass
 
-    def get_action(
+        """
+        def get_action(
         self, observation: dict[str, Any], options: dict[str, Any] | None = None
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Compute and return the next action based on current observation with validation.
+        if self.strict:
+            self.check_observation(observation)
+        action, info = self._get_action(observation, options)
+        if self.strict:
+            self.check_action(action)
+        return action, info
+
+        
+        Compute and return the next action based on current observation with validation.
 
         This is the main public interface. It validates the observation, calls
         the internal _get_action(), and validates the resulting action.
@@ -97,13 +106,15 @@ class BasePolicy(ABC):
         Raises:
             AssertionError/ValueError: If observation or action validation fails
         """
+
+    def get_action(self, observation, options=None):
         if self.strict:
             self.check_observation(observation)
         action, info = self._get_action(observation, options)
         if self.strict:
             self.check_action(action)
         return action, info
-
+        
     @abstractmethod
     def reset(self, options: dict[str, Any] | None = None) -> dict[str, Any]:
         """Reset the policy to its initial state.
